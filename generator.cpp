@@ -1,134 +1,191 @@
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <iostream>
-#include <stdlib.h>
+#include "stdio.h"
+#include "string.h"
+#include "time.h"
+#include "iostream"
+#include "stdlib.h"
 
-int Board[9][9];
+int Board[25][9][9];
 int Try_List[9];
 
-void swap(int &a, int &b)
-{
+int Read(char str[])							//ÅĞ¶Ï¶ÁÈ¡µÄ²ÎÊıµÄºÏ·¨ĞÔ
+{   
+	int Num = 0, i;
+	int len = strlen(str);
+
+	for (i = 0; i < len; i++) 
+	{
+		if (str[i] > '9' || str[i] < '0')
+			return 0;
+		Num *= 10;
+		Num += str[i] - '0';
+		if (Num > 1000000 || Num == 0)
+			return 0;
+	}
+
+	return Num;
+}
+
+void Swap(int &a, int &b)							//½»»»Á½¸öÊı
+{    
 	int temp;
 	temp = a;
 	a = b;
 	b = temp;
 }
 
-int Random_Init(int Num[])				//éšæœºç”Ÿæˆ1-9å…¨æ’åˆ—
+int Random_Init(int Num[])							//Ëæ»úÉú³É1-9È«ÅÅÁĞ
 {
-	for (int i = 0; i < 9; i++)			//é¡ºåºå¡«å…¥1~9
+	int i, j;
+	for (i = 0; i < 9; i++)	
 		Num[i] = i + 1;
-
-	for (int i = 0; i < 20; i++)
+	for (i = 0; i < 20; i++) 
 	{
-		int j = rand() % 9;				//éšæœºç”Ÿæˆ0~8æ•°å­—
-		swap(Num[j], Num[8]);			//ä¸æœ€åä¸€ä¸ªæ•°å­—äº¤æ¢
+		j = rand() % 9;								//Ëæ»úÉú³É0-8Êı×Ö
+		Swap(Num[j], Num[8]);
 	}
 
 	return 0;
 }
 
-bool Judge(int x,int y,int num)			//åˆ¤æ–­å®«æ ¼æ˜¯å¦åˆæ³•
+int Judge_Sudoku(int s, int x, int y, int num)		//ÅĞ¶ÏÌî³äµÄºÏ·¨ĞÔ
 {
-	for (int i = 0; i < 9; i++)
-	{
-		if (Board[x][i] == num)
+	int i;
+	for (i = 0; i < 9; i++)							//µ±Ç°ĞĞ¡¢ÁĞºÏ·¨ÅĞ¶Ï
+	{    
+		if (Board[s][x][i] == num)
 			return 0;
-		if (Board[i][y] == num)
+		if (Board[s][i][y] == num)
 			return 0;
 	}
 
-	int area_x = x - x % 3, area_y = y - y % 3;
-	for (int i = area_x; i < area_x + 3; i++)
-		for (int j = area_y; j < area_y + 3;j++)
-			if (Board[i][j] == num)
+	int area_x = x - x % 3;							//¶¨Òå¹¬¸ñºá×ø±ê
+	int	area_y = y - y % 3;							//¶¨Òå¹¬¸ñ×İ×ø±ê
+
+	for (i = area_x; i < area_x + 3; i++)			//µ±Ç°¹¬¸ñºÏ·¨ÅĞ¶Ï
+		for (int j = area_y; j < area_y + 3; j++)
+			if (Board[s][i][j] == num)
 				return 0;
 
 	return 1;
 }
 
-int Fill_Sudoku(int x,int y)								//å¡«å……
-{
-	int ori = Board[x][y];
-	int next_x = x + (y + 1) / 9;							//ä¸‹ä¸€æ–¹æ ¼æ¨ªåæ ‡
-	int	next_y = (y + 1) % 9;								//ä¸‹ä¸€æ–¹æ ¼çºµåæ ‡
+int Fill_Sudoku(int s, int x, int y)				//Ìî³äº¯Êı
+{    
+	int Trace_back = Board[s][x][y];
+	int next_x = x + (y + 1) / 9;					//¶¨ÒåÏÂÒ»·½¸ñºá×ø±ê
+	int	next_y = (y + 1) % 9;						//¶¨ÒåÏÂÒ»·½¸ñ×ø±ê
 
-	if (x >= 9)												//è‹¥å…¨éƒ¨å®Œæˆåˆ™è¿”å›
+	if (x > 8)
 		return 1;
 
-	if (Board[x][y])										//å½“å‰æ ¼å·²å¡«å……
+	if (Board[s][x][y]) 
 	{
-		if (Fill_Sudoku(next_x, next_y))
+		if (Fill_Sudoku(s, next_x, next_y))
 			return 1;
 	}
-	else
-	{
-		for (int i = 0; i < 9; i++)
+	else 
+	{	
+		int i;
+		for (i = 0; i < 9; i++)						//ÅĞ¶ÏºÏ·¨ĞÔ
 		{
-			int Try_Num = Try_List[i];						//å½“å‰å°è¯•æ•°å­—
-			if (Judge(x, y, Try_Num))						//åˆ¤æ–­æ˜¯å¦åˆæ³•
+			int Try_Num = Try_List[i];
+			if (Judge_Sudoku(s, x, y, Try_Num))
 			{
-				Board[x][y] = Try_Num;
-				if (Fill_Sudoku(next_x, next_y))
+				Board[s][x][y] = Try_Num;
+				if (Fill_Sudoku(s, next_x, next_y))
 					return 1;
 			}
 		}
 	}
-	Board[x][y] = ori;										//å›æº¯è¿˜åŸ
+
+	Board[s][x][y] = Trace_back;
 
 	return 0;
 }
 
-int Creat_Sudoku(int Sodoku_Num)
+void Swap_Y(int s, int beg, int end)				//ÁĞËæ»ú½»»»
 {
-	freopen("sudoku.txt", "w", stdout);
-	srand((unsigned)time(NULL));							//æ—¶é—´ç§å­
-	while (Sodoku_Num--)
+	int i, j, k;
+	for (i = 0; i < 5; i++) 
 	{
-		for (int i = 0; i < 9;i++)							//åˆå§‹åŒ–æ‰€æœ‰å®«æ ¼
-			memset(Board[i], 0, sizeof(Board[i]));
+		j = rand() % (end - beg + 1) + beg;
+		for (k = 0; k < 9; k++)
+			Swap(Board[s][k][j], Board[s][k][end]);
+	}
+}
 
-		Random_Init(Board[0]);								//éšæœºåˆå§‹åŒ–ç¬¬ä¸€è¡Œæ•°å­—
-		for (int i = 0; i < 9; i++)
-			if (Board[0][i] == 8)
-			{												//å­¦å·åä¸¤ä½97
-				swap(Board[0][0], Board[0][i]);
+void Swap_X(int s, int beg, int end)				//ĞĞËæ»ú½»»»
+{    
+	int i, j, k;
+	for (i = 0; i < 5; i++) 
+	{
+		j = rand() % (end - beg + 1) + beg;
+		for (k = 0; k < 9; k++)
+			Swap(Board[s][j][k], Board[s][end][k]);
+	}
+
+}
+
+int Creat_Sudoku(int Sodoku_Num)					//Éú³ÉÖÕ¾Ö
+{    
+	int i, j, extend = 1000;
+	freopen("sudoku.txt", "w", stdout);
+	srand(unsigned(time(0)));						//Éú³ÉÎ±Ëæ»úÊı
+	while (Sodoku_Num > 0) 
+	{
+		memset(Board, 0, sizeof(Board));
+		for (i = 0; i < 20; i++)					//Ã¿ÂÖÉú³É20¸öÖÖ×Ó¾ØÕó
+		{    
+			Random_Init(Board[i][0]);				//Ëæ»ú³õÊ¼»¯µÚÒ»ĞĞÊı×Ö
+			for (j = 0; j < 9; j++)
+				if (Board[i][0][j] == 8)			//Ñ§ºÅºóÁ½Î»Îª97
+				{ 
+					Swap(Board[i][0][0], Board[i][0][j]);
+					break;
+				}
+			Random_Init(Try_List);					//Ëæ»ú³õÊ¼»¯Êı×Ö³¢ÊÔË³Ğò
+			Fill_Sudoku(i, 1, 0);    
+		}
+
+		while (extend--)							//À©Õ¹1000¸öÖÕ¾Ö
+		{    
+			if (Sodoku_Num-- == 0)
 				break;
-			}
+			int sand = rand() % 20;
+			int i, j;
+			Swap_Y(sand, 1, 2), Swap_X(sand, 1, 2);
+			Swap_Y(sand, 3, 5), Swap_X(sand, 3, 5);
+			Swap_Y(sand, 6, 8), Swap_X(sand, 6, 8);
 
-		Random_Init(Try_List);								//éšæœºåˆå§‹åŒ–æ•°å­—å°è¯•é¡ºåº
-
-		Fill_Sudoku(1,0);									//æ±‚è§£æ®‹å±€
-		for (int i = 0; i < 9; i++)
-			for (int j = 0; j < 9; j++)
-				printf("%d%c", Board[i][j], j == 8 ? '\n' : ' ');
-		putchar('\n');
+			for (i = 0; i < 9; i++)
+				for (j = 0; j < 9; j++)
+					printf("%d%c", Board[sand][i][j], j == 8 ? '\n' : ' ');
+			putchar('\n');
+		}
 	}
 	fclose(stdout);
 
 	return 0;
 }
 
-int Solve_Sudoku(char file[])
-{
-	freopen(file, "r", stdin);
-	freopen("sudoku.txt", "w", stdout);
-	int temp, i = 0, j = 0;
-	srand((unsigned)time(NULL));					//æ—¶é—´ç§å­
+int Solve_Sudoku(char File[])						//Çó½â²Ğ¾ÖÃüÁî
+{    
+	freopen(File, "r", stdin);
+	freopen("sudoku_answer.txt", "w", stdout);
+	srand(unsigned(time(0)));						//Ê±¼äÖÖ×Ó
 	Random_Init(Try_List);
-	while (~scanf("%d", &temp))
+	int i = 0, j = 0;
+	while (~scanf_s("%d", &Board[0][i][j])) 
 	{
-		Board[i][j] = temp;
-		i += (j + 1) / 9;
+		i += (j + 1) / 9;							//ÏÂÒ»Êı×Ö×ø±ê
 		j = (j + 1) % 9;
-		if (i == 9)									//æ±‚è§£æ•°ç‹¬
+		if (i == 9) 
 		{
-			Fill_Sudoku(0, 0);
+			Fill_Sudoku(0, 0, 0);
 			i = j = 0;
-			for (int i = 0; i < 9; i++)
+			for (int i = 0; i < 9; i++)				//´òÓ¡
 				for (int j = 0; j < 9; j++)
-					printf("%d%c", Board[i][j], j == 8 ? '\n' : ' ');
+					printf("%d%c", Board[0][i][j], j == 8 ? '\n' : ' ');
 			putchar('\n');
 		}
 	}
