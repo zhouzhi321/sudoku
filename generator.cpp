@@ -10,6 +10,7 @@ int Try_List[9];
 int Read(char str[])							//判断读取的参数的合法性
 {   
 	int Num = 0, i;
+	//strcpy(str,"sudoku.exe -c 2");
 	int len = strlen(str);
 
 	for (i = 0; i < len; i++) 
@@ -159,7 +160,15 @@ int Creat_Sudoku(int Sodoku_Num)					//生成终局
 
 			for (i = 0; i < 9; i++)
 				for (j = 0; j < 9; j++)
-					printf("%d%c", Board[sand][i][j], j == 8 ? '\n' : ' ');
+				{
+					if (j < 8)
+					{
+						putchar(Board[sand][i][j] + '0');
+						putchar(' ');
+					}
+					else putchar('\n');
+					
+				}
 			putchar('\n');
 		}
 	}
